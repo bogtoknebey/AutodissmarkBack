@@ -8,3 +8,11 @@ src/Autodissmark.API/obj
 src/Autodissmark.Core/.vs
 src/Autodissmark.Core/bin
 src/Autodissmark.Core/obj
+
+src/Autodissmark.ExternalServices/.vs
+src/Autodissmark.ExternalServices/bin
+src/Autodissmark.ExternalServices/obj
+
+src/Autodissmark.Application/.vs
+src/Autodissmark.Application/bin
+src/Autodissmark.Application/obj
