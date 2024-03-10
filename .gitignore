@@ -1,0 +1,10 @@
+.vs
+PoetryViewerBack/PoetryViewerBack/obj
+
+src/Autodissmark.API/.vs
+src/Autodissmark.API/bin
+src/Autodissmark.API/obj
+
+src/Autodissmark.Core/.vs
+src/Autodissmark.Core/bin
+src/Autodissmark.Core/obj
