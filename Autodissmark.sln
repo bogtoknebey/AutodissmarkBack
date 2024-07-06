@@ -9,9 +9,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{94B91207-BBC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.Core", "src\Autodissmark.Core\Autodissmark.Core.csproj", "{EEA81195-DAE7-410E-988F-0273D400E060}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autodissmark.ExternalServices", "src\Autodissmark.ExternalServices\Autodissmark.ExternalServices.csproj", "{21387C77-661D-4C5D-A761-82EC48292C25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.ExternalServices", "src\Autodissmark.ExternalServices\Autodissmark.ExternalServices.csproj", "{21387C77-661D-4C5D-A761-82EC48292C25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autodissmark.Application", "src\Autodissmark.Application\Autodissmark.Application.csproj", "{7111F709-C579-40B8-AF7B-D5258E70636E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.Application", "src\Autodissmark.Application\Autodissmark.Application.csproj", "{7111F709-C579-40B8-AF7B-D5258E70636E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.TextProcessor", "src\Autodissmark.TextProcessor\Autodissmark.TextProcessor.csproj", "{46408841-7E0C-4C26-A4C8-A4F6A6AD526C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.TextProcessorDataAccess", "src\Autodissmark.TextProcessorDataAccess\Autodissmark.TextProcessorDataAccess.csproj", "{4C70EFC5-C26C-4819-91EB-3D362055C970}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.ApplicationDataAccess", "src\Autodissmark.ApplicationDataAccess\Autodissmark.ApplicationDataAccess.csproj", "{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.TGBot", "src\Autodissmark.TGBot\Autodissmark.TGBot.csproj", "{27C2157C-9C4E-4F39-9D91-9576B4BA23EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.AudioMixer", "src\Autodissmark.AudioMixer\Autodissmark.AudioMixer.csproj", "{A3315FF6-A607-450E-B511-4237C5B191F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autodissmark.Domain", "src\Autodissmark.Domain\Autodissmark.Domain.csproj", "{58DE5861-6962-4C4A-A567-0A8034F53B16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B324BFBE-7CD6-4825-8D77-29991D79E3AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +49,30 @@ Global
 		{7111F709-C579-40B8-AF7B-D5258E70636E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7111F709-C579-40B8-AF7B-D5258E70636E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7111F709-C579-40B8-AF7B-D5258E70636E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46408841-7E0C-4C26-A4C8-A4F6A6AD526C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46408841-7E0C-4C26-A4C8-A4F6A6AD526C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46408841-7E0C-4C26-A4C8-A4F6A6AD526C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46408841-7E0C-4C26-A4C8-A4F6A6AD526C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C70EFC5-C26C-4819-91EB-3D362055C970}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C70EFC5-C26C-4819-91EB-3D362055C970}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C70EFC5-C26C-4819-91EB-3D362055C970}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C70EFC5-C26C-4819-91EB-3D362055C970}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27C2157C-9C4E-4F39-9D91-9576B4BA23EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27C2157C-9C4E-4F39-9D91-9576B4BA23EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27C2157C-9C4E-4F39-9D91-9576B4BA23EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27C2157C-9C4E-4F39-9D91-9576B4BA23EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3315FF6-A607-450E-B511-4237C5B191F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3315FF6-A607-450E-B511-4237C5B191F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3315FF6-A607-450E-B511-4237C5B191F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3315FF6-A607-450E-B511-4237C5B191F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58DE5861-6962-4C4A-A567-0A8034F53B16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58DE5861-6962-4C4A-A567-0A8034F53B16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58DE5861-6962-4C4A-A567-0A8034F53B16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58DE5861-6962-4C4A-A567-0A8034F53B16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +82,12 @@ Global
 		{EEA81195-DAE7-410E-988F-0273D400E060} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
 		{21387C77-661D-4C5D-A761-82EC48292C25} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
 		{7111F709-C579-40B8-AF7B-D5258E70636E} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{46408841-7E0C-4C26-A4C8-A4F6A6AD526C} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{4C70EFC5-C26C-4819-91EB-3D362055C970} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{2BFB3BAF-DFA7-4037-867E-C6D26718E2EA} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{27C2157C-9C4E-4F39-9D91-9576B4BA23EA} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{A3315FF6-A607-450E-B511-4237C5B191F1} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
+		{58DE5861-6962-4C4A-A567-0A8034F53B16} = {94B91207-BBCE-4B36-B60C-7AB4655CAFC7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3A53EAC9-77A0-499D-B593-E1A73DB7A828}

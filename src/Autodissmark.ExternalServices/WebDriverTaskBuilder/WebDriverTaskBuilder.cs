@@ -16,6 +16,8 @@ public class WebDriverTaskBuilder : IWebDriverTaskBuilder
     {
         if (downloadDirectory != null)
         {
+            downloadDirectory = Path.GetFullPath(downloadDirectory);
+
             if (!Directory.Exists(downloadDirectory))
             {
                 throw new Exception("Download directory is not exist");

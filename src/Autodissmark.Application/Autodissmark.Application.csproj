@@ -7,8 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Autodissmark.ApplicationDataAccess\Autodissmark.ApplicationDataAccess.csproj" />
+    <ProjectReference Include="..\Autodissmark.AudioMixer\Autodissmark.AudioMixer.csproj" />
     <ProjectReference Include="..\Autodissmark.Core\Autodissmark.Core.csproj" />
+    <ProjectReference Include="..\Autodissmark.Domain\Autodissmark.Domain.csproj" />
     <ProjectReference Include="..\Autodissmark.ExternalServices\Autodissmark.ExternalServices.csproj" />
+    <ProjectReference Include="..\Autodissmark.TextProcessorDataAccess\Autodissmark.TextProcessorDataAccess.csproj" />
+    <ProjectReference Include="..\Autodissmark.TextProcessor\Autodissmark.TextProcessor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Voiceover\ManualVoiceover\" />
   </ItemGroup>
 
 </Project>

@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
     <PackageReference Include="Selenium.WebDriver" Version="4.18.1" />
     <PackageReference Include="SeleniumExtras.WaitHelpers" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Autodissmark.Core\Autodissmark.Core.csproj" />
+    <ProjectReference Include="..\Autodissmark.Domain\Autodissmark.Domain.csproj" />
   </ItemGroup>
 
 </Project>

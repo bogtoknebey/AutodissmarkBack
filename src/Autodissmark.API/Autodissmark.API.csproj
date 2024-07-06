@@ -4,17 +4,27 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.ExpressionMapping" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Autodissmark.Application\Autodissmark.Application.csproj" />
+    <ProjectReference Include="..\Autodissmark.AudioMixer\Autodissmark.AudioMixer.csproj" />
     <ProjectReference Include="..\Autodissmark.Core\Autodissmark.Core.csproj" />
-    <ProjectReference Include="..\Autodissmark.ExternalServices\Autodissmark.ExternalServices.csproj" />
+    <ProjectReference Include="..\Autodissmark.Domain\Autodissmark.Domain.csproj" />
+    <ProjectReference Include="..\Autodissmark.TextProcessorDataAccess\Autodissmark.TextProcessorDataAccess.csproj" />
+    <ProjectReference Include="..\Autodissmark.TextProcessor\Autodissmark.TextProcessor.csproj" />
   </ItemGroup>
 
 </Project>
