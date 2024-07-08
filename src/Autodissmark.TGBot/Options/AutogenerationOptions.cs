@@ -2,6 +2,7 @@
 
 public class AutogenerationOptions
 {
+    public const string SectionName = "Autogeneration";
     public List<int> LinesCounts { get; set; }
     public List<int> WordsInLineCounts { get; set; }
     public List<string> SwitchLanguages { get; set; }
