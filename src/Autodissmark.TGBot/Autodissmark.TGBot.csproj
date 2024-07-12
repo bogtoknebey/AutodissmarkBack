@@ -15,10 +15,17 @@
     <ProjectReference Include="..\Autodissmark.Core\Autodissmark.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="tgBotSettings.json">
+  <!--<ItemGroup>
+    <None Update="TgSettings\tgBotSettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
+  </ItemGroup>-->
 
+  <ItemGroup>
+    <None Update="TgSettings/tgBotSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>tgBotSettings.json</TargetPath>
+    </None>
+  </ItemGroup>
+  
 </Project>

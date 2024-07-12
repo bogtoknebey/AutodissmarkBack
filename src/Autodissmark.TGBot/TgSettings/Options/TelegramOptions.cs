@@ -1,4 +1,4 @@
-﻿namespace Autodissmark.TGBot.Options;
+﻿namespace Autodissmark.TGBot.TgSettings.Options;
 
 public class TelegramDataOptions
 {

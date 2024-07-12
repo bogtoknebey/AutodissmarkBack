@@ -33,3 +33,5 @@ src/Autodissmark.Application/obj
 /src/Autodissmark.Domain/bin/Debug/net8.0
 /src/Autodissmark.Domain/obj
 /src/Autodissmark.TGBot/data
+/src/Autodissmark.TGBot/tgBotSettings.json
+/src/Autodissmark.TGBot/Settings/tgBotSettings.json
