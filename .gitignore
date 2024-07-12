@@ -35,3 +35,4 @@ src/Autodissmark.Application/obj
 /src/Autodissmark.TGBot/data
 /src/Autodissmark.TGBot/tgBotSettings.json
 /src/Autodissmark.TGBot/Settings/tgBotSettings.json
+/src/Autodissmark.TGBot/TgSettings/tgBotSettings.json
