@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Autodissmark.Domain\Autodissmark.Domain.csproj" />
     <ProjectReference Include="..\Autodissmark.TextProcessorDataAccess\Autodissmark.TextProcessorDataAccess.csproj" />
     <ProjectReference Include="..\Autodissmark.TextProcessor\Autodissmark.TextProcessor.csproj" />
+    <ProjectReference Include="..\Autodissmark.TGBot\Autodissmark.TGBot.csproj" />
   </ItemGroup>
 
 </Project>

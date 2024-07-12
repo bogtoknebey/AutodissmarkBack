@@ -6,7 +6,7 @@ public enum TgRole
     User = 2
 }
 
-public class ChatStatus
+public class UserChat
 {
     public TgRole Role { get; set; }
     public bool Disable { get; set; }

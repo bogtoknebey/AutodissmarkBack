@@ -1,435 +1,423 @@
-﻿//using Autodissmark.TGBot.Models;
-//using Telegram.Bot;
-//using Telegram.Bot.Types.Enums;
-//using Telegram.Bot.Types.ReplyMarkups;
-//using Telegram.Bot.Types;
-//using PoetryViewerBack.Autocreation;
-//using PoetryViewerBack.Models;
-//using System;
-//using System.IO;
-//using Newtonsoft.Json;
-//using PoetryViewerBack.DTO;
-//using System.Text;
+﻿using Autodissmark.TGBot.Models;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot.Types;
+using System.Text;
+using Autodissmark.TGBot.TgSettings.Options;
+using Autodissmark.TGBot.Autogeneration;
+using Autodissmark.TGBot.TgSettings;
+using Autodissmark.TGBot.UserChats;
 
-//namespace Autodissmark.TGBot;
+namespace Autodissmark.TGBot;
 
-//public class TGBot
-//{
-//    private TgSettings Settings;
-//    private Dictionary<long, ChatStatus>? Chats;
+public class TgBot
+{
+    private const int DailyAttemptsReloadTimeInHours = 12;
+    private const string StartCommand = "/start";
+    private const string ResetCommand = "/reset";
+    private const string HelpCommand = "/help";
+    private const string SaveCommand = "/save";
+    private const string AddTagetCommand = "/add target ";
+    private const string RemoveTargetCommand = "/remove target ";
 
-//    // Set up block
+    private TgBotSettingsMaster _tgBotSettingsMaster;
+    private UserChatsMaster _userChatsMaster;
+    private ApiOptions _apiOptions;
+    private AutogenerationOptions _autogenerationOptions;
+    private TelegramOptions _telegramOptions;
+    private AutogenerationLogic _autogenerationLogic;
+    private Dictionary<long, UserChat> Chats;
 
-//    public TGBot() 
-//    {
-//        Settings = TgSettings.ReadSettings();
+    #region Set up block
 
-//        Chats = ReadChatsState();
-//        if (Chats is null)
-//            Chats = new Dictionary<long, ChatStatus>();
-//    }
+    public TgBot() { }
 
-//    public void Run()
-//    {
-//        if (Chats is null)
-//            return;
-//        var botClient = new TelegramBotClient("6906816161:AAFEaldl6S7q6yt-Ha3_TCB2gg3lMCBFJeU");
-//        botClient.StartReceiving(BotUpdate, BotError);
-//    }
+    public async Task Setup()
+    {
+        _tgBotSettingsMaster = new TgBotSettingsMaster();
 
-//    // Read/Write methods
+        _apiOptions = await _tgBotSettingsMaster.ReadApiOptions();
+        _autogenerationOptions = await _tgBotSettingsMaster.ReadAutogenerationOptions();
+        _telegramOptions = await _tgBotSettingsMaster.ReadTelegramOptions();
 
-//    private Dictionary<long, ChatStatus>? ReadChatsState()
-//    {
-//        // TODO: make TgRole properly readible and writable 0/1 vs 1/2
-//        Dictionary<long, ChatStatus> res = new Dictionary<long, ChatStatus>();
-//        string path = DTO.PathMaster.ChatsStatesPath();
-//        string[] filePaths = Directory.GetFiles(path, "*.txt");
-//        foreach (var filePath in filePaths)
-//        {
-//            long chatId = Convert.ToInt64(filePath.Split('/', '\\').Last().Split(".")[0]);
-//            try
-//            {
-//                string json = System.IO.File.ReadAllText(filePath);
+        _userChatsMaster = new UserChatsMaster();
+        _autogenerationLogic = new AutogenerationLogic(_apiOptions);
 
-//                ChatStatus? chat = JsonConvert.DeserializeObject<ChatStatus>(json);
-//                if (chat is not null)
-//                    res.Add(chatId, chat);
-//            }
-//            catch { }
-//        }
+        Chats = await _userChatsMaster.ReadChatsStates();
+    }
 
-//        return res;
-//    }
+    public void Run()
+    {
+        if (Chats is null)
+        {
+            throw new Exception("Cannot run tgBot because of empty Chats.");
+        }
 
-//    private bool WriteChatsState()
-//    {
-//        // TODO: make TgRole properly readible and writable 0/1 vs 1/2
-//        foreach (var chat in Chats)
-//        {
-//            string filePath = DTO.PathMaster.ChatsStatesFilePath(chat.Key);
-//            try
-//            {
-//                string json = JsonConvert.SerializeObject(chat.Value, Formatting.Indented);
-//                System.IO.File.WriteAllText(filePath, json);
-//            }
-//            catch (Exception ex)
-//            {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
+        var botClient = new TelegramBotClient(_telegramOptions.BotKey);
+        botClient.StartReceiving(BotUpdate, BotError);
+    }
 
-//    // Update routing
+    #endregion
 
-//    private void AddNewChat(long chatId)
-//    {
-//        if (!Chats.ContainsKey(chatId))
-//        {
-//            Chats[chatId] = new ChatStatus() 
-//            { 
-//                Role = TgRole.User, 
-//                Disable = false, 
-//                LeftAttempts = Settings.UserAttempts, 
-//                LastModify = DateTime.Today.AddHours(12)
-//            };
-//        }
-//    }
+    #region Update routing
 
-//    async private Task BotUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
-//    {
-//        if (update.Type == UpdateType.Message)
-//        {
-//            MessageUpdate(botClient, update, token);
-//            return;
-//        }
-//        if (update.Type == UpdateType.CallbackQuery)
-//        {
-//            CallbackQueryUpdate(botClient, update, token);
-//            return;
-//        }
-//    }
+    private void AddChatIfThereNo(long chatId)
+    {
+        if (!Chats.ContainsKey(chatId))
+        {
+            Chats[chatId] = new UserChat()
+            {
+                Role = TgRole.User,
+                Disable = false,
+                LeftAttempts = _telegramOptions.Roles.User.Attempts,
+                LastModify = DateTime.Today.AddHours(DailyAttemptsReloadTimeInHours)
+            };
+        }
+    }
 
-//    async private Task MessageUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
-//    {
-//        var message = update.Message;
-//        long chatId = message.Chat.Id;
+    private async Task BotUpdate(ITelegramBotClient botClient, Update update, CancellationToken ct)
+    {
+        if (update.Type == UpdateType.Message)
+        {
+            MessageUpdate(botClient, update, ct);
+            return;
+        }
+        if (update.Type == UpdateType.CallbackQuery)
+        {
+            CallbackQueryUpdate(botClient, update, ct);
+            return;
+        }
+    }
 
-//        AddNewChat(chatId); // add if there no such
+    private async Task MessageUpdate(ITelegramBotClient botClient, Update update, CancellationToken ct)
+    {
+        var message = update.Message;
+        var chatId = message!.Chat.Id;
 
-//        var chat = Chats[chatId];
-//        chat.UnimportantMessages.Add(message.MessageId);
+        AddChatIfThereNo(chatId);
 
-//        if (Chats.ContainsKey(chatId) && Chats[chatId].Disable)
-//            return;
+        var chat = Chats[chatId];
+        chat.UnimportantMessages.Add(message.MessageId);
 
-//        // Common commands
-//        if (message.Text == "/start")
-//        {
-//            Message Message;
-            
-//            // restore LeftAttempts every day
-//            if ((DateTime.Now - chat.LastModify) > TimeSpan.FromDays(1))
-//            {
-//                if (chat.Role == TgRole.User)
-//                    chat.LeftAttempts = Settings.UserAttempts;
-//                if (chat.Role == TgRole.Admin)
-//                    chat.LeftAttempts = Settings.AdminAttempts;
-//                chat.LastModify = DateTime.Today.AddHours(12);
+        if (Chats.ContainsKey(chatId) && Chats[chatId].Disable) 
+        {
+            return;
+        }
 
-//                await SendUniportentMessage(botClient, chatId, 
-//                    $"Хорошая новость, ваши попытки васстановлены у вас снова {chat.LeftAttempts} попыток!"
-//                    );
-//            }
+        // Common commands
+        if (message.Text == StartCommand)
+        {
+            // restore LeftAttempts every day
+            if ((DateTime.Now - chat.LastModify) > TimeSpan.FromDays(1))
+            {
+                if (chat.Role == TgRole.User) 
+                {
+                    chat.LeftAttempts = _telegramOptions.Roles.User.Attempts;
+                }
 
-//            // check LeftAttempts
-//            if (chat.LeftAttempts <= 0) 
-//            {
-//                await SendUniportentMessage(botClient, chatId, "У вас больше не осталось попыток!");
-//                return;
-//            }
-//            else
-//            {
-//                chat.LeftAttempts--;
-//            }
+                if (chat.Role == TgRole.Admin) 
+                {
+                    chat.LeftAttempts = _telegramOptions.Roles.Admin.Attempts;
+                }
 
-//            // do /start
-//            await SendUniportentMessage(botClient, chatId, "Вас приветсвтует Автодиссер!");
-//            await SendTargetNamesList(botClient, chatId);
-//            return;
-//        }
-//        if (message.Text == "/reset")
-//        {
-//            await RemoveUnimportentMessages(botClient, chatId);
-//            return;
-//        }
-//        if (message.Text == "/help")
-//        {
-//            StringBuilder description = new StringBuilder();
-//            description.Append("Основные команды:\n\n");
-//            description.Append("/help - список команд и их описания\n");
-//            description.Append(
-//                $"/start - запустить процесс создания дисса, " +
-//                $"существует лимит на данную команду: {Settings.UserAttempts} раз в сутки\n"
-//                );
-//            description.Append("/reset - удалить все ненужные сообщения (все кроме диссов)\n");
+                chat.LastModify = DateTime.Today.AddHours(DailyAttemptsReloadTimeInHours);
 
-//            if (chat.Role == TgRole.Admin)
-//            {
-//                description.Append("\nСпециальные команды:\n\n");
-//                description.Append("/save - сохранить состояния всех чатов (небходимо вызвать перед перезапуском)\n");
-//                description.Append("/add target {имя} - Добавть цель \n");
-//                description.Append("/remove target {имя} - Удалить цель\n");
-//            }
+                await SendUniportentMessage(botClient, chatId, $"Хорошая новость, ваши попытки васстановлены у вас снова {chat.LeftAttempts} попыток!");
+            }
 
-//            await SendUniportentMessage(botClient, chatId, description.ToString());
-//            return;
-//        }
+            // check and count LeftAttempts
+            if (chat.LeftAttempts <= 0)
+            {
+                await SendUniportentMessage(botClient, chatId, "У вас больше не осталось попыток!");
+                return;
+            }
+            chat.LeftAttempts--;
 
-//        // Specific commands
-//        if (chat.Role != TgRole.Admin)
-//            return;
-//        if (message.Text == "/save")
-//        {
-//            string response;
-//            bool savingRes = WriteChatsState();
+            // do /start
+            await SendUniportentMessage(botClient, chatId, "Вас приветсвтует Автодиссер!");
+            await SendTargetNamesList(botClient, chatId);
+            return;
+        }
+        if (message.Text == ResetCommand)
+        {
+            await RemoveUnimportentMessages(botClient, chatId);
+            return;
+        }
+        if (message.Text == HelpCommand)
+        {
+            StringBuilder description = new StringBuilder();
+            description.Append("Основные команды:\n\n");
+            description.Append("/help - список команд и их описания\n");
+            description.Append
+            (
+                $"/start - запустить процесс создания дисса, " +
+                $"существует лимит на данную команду: {_telegramOptions.Roles.User.Attempts} раз в сутки\n"
+            );
+            description.Append("/reset - удалить все ненужные сообщения (все кроме диссов)\n");
 
-//            if (chat.Role == TgRole.Admin) 
-//            {
-//                if (savingRes)
-//                    response = "Сохранение прошло успешно!";
-//                else
-//                    response = "Ошибка сохранения!";
-//            }
-//            else
-//            {
-//                response = "У вас нет прав на использование этой комманды!";
-//            }
-//            await SendUniportentMessage(botClient, chatId, response);
-//            return;
-//        }
-//        if (message.Text.Contains("/add target "))
-//        {
-//            try
-//            {
-//                string name = message.Text.Split(' ')[2];
-//                Settings.TargetNames.Add(name);
-//                SendUniportentMessage(botClient, chatId, $"Имя {name} добавлено.");
-//                Settings.WriteSettings();
-//            }
-//            catch
-//            {
-//                SendUniportentMessage(botClient, chatId, "Не правильный формат комманды. Используйте /help чтобы уточнить комманду.");
-//            }
+            if (chat.Role == TgRole.Admin)
+            {
+                description.Append("\nСпециальные команды:\n\n");
+                description.Append("/save - сохранить состояния всех чатов (небходимо вызвать перед перезапуском)\n");
+                description.Append("/add target {имя} - Добавть цель \n");
+                description.Append("/remove target {имя} - Удалить цель\n");
+            }
 
-//            return;
-//        }
-//        if (message.Text.Contains("/remove target "))
-//        {
-//            try
-//            {
-//                string name = message.Text.Split(' ')[2];
-//                Settings.TargetNames.Remove(name);
-//                SendUniportentMessage(botClient, chatId, $"Имя {name} удалено.");
-//                Settings.WriteSettings();
-//            }
-//            catch
-//            {
-//                SendUniportentMessage(botClient, chatId, "Не правильный формат комманды или неправильный аргумент. Используйте /help чтобы уточнить комманду.");
-//            }
+            await SendUniportentMessage(botClient, chatId, description.ToString());
+            return;
+        }
 
-//            return;
-//        }
-//    }
+        // Specific commands (only for Admins)
+        if (chat.Role != TgRole.Admin) 
+        {
+            return;
+        }
 
-//    async private Task CallbackQueryUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
-//    {
-//        long chatId = update.CallbackQuery.Message.Chat.Id;
-//        if (Chats[chatId].Disable)
-//            return;
+        if (message.Text == SaveCommand)
+        {
+            string response;
 
-//        int messageId = update.CallbackQuery.Message.MessageId;
-//        string[] data = update.CallbackQuery.Data.Split(":");
+            var savingRes = await _userChatsMaster.WriteChatsStates(Chats);
 
-//        if (data[0] == "target")
-//        {
-//            await SelectTargetName(botClient, chatId, messageId, data[1]);
-//            return;
-//        }
-//        if (data[0] == "beat")
-//        {
-//            await SelectBeat(botClient, chatId, messageId, data[1]);
-//            return;
-//        }
-//        return;
-//    }
-    
-//    // Main logic set 
+            if (savingRes)
+            {
+                response = "Сохранение прошло успешно!";
+            }
+            else
+            {
+                response = "Ошибка сохранения!";
+            }
 
-//    async private Task SendTargetNamesList(ITelegramBotClient botClient, long chatId)
-//    {
-//        string callBackId = "target";
-//        List<List<InlineKeyboardButton>> buttons = new();
-//        foreach (var name in Settings.TargetNames)
-//        {
-//            InlineKeyboardButton urlButton = new InlineKeyboardButton(name);
-//            urlButton.CallbackData = $"{callBackId}:{name}";
-//            buttons.Add(new List<InlineKeyboardButton> { urlButton });
-//        }
-//        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
+            await SendUniportentMessage(botClient, chatId, response);
+            return;
+        }
+        if (message.Text.Substring(0, AddTagetCommand.Length) == AddTagetCommand)
+        {
+            try
+            {
+                var targetName = message.Text.Split(' ')[2];
+                _autogenerationOptions.Targets.Add(targetName);
 
-//        await SendUniportentMessage(botClient, chatId, "Выберите вашу цель: ", keyboard);
-//    }
+                await _tgBotSettingsMaster.WriteAutogenerationOptions(_autogenerationOptions);
+                SendUniportentMessage(botClient, chatId, $"Имя {targetName} добавлено.");
+            }
+            catch
+            {
+                SendUniportentMessage(botClient, chatId, "Не правильный формат комманды. Используйте /help чтобы уточнить комманду.");
+            }
 
-//    async private Task SelectTargetName(ITelegramBotClient botClient, long chatId, int messageId, string targetName)
-//    {
-//        // save selected target name
-//        Chats[chatId].SelectedTarget = targetName;
+            return;
+        }
+        if (message.Text.Substring(0, RemoveTargetCommand.Length) == RemoveTargetCommand)
+        {
+            try
+            {
+                var targetName = message.Text.Split(' ')[2];
+                _autogenerationOptions.Targets.Remove(targetName);
 
-//        // remove targetName keyboard
-//        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
-//        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваша цель: {targetName}");
+                await _tgBotSettingsMaster.WriteAutogenerationOptions(_autogenerationOptions);
+                SendUniportentMessage(botClient, chatId, $"Имя {targetName} удалено.");
+            }
+            catch
+            {
+                SendUniportentMessage(botClient, chatId, "Не правильный формат комманды или неправильный аргумент. Используйте /help чтобы уточнить комманду.");
+            }
 
-//        // set beat keyboard
-//        await SendBeatsList(botClient, chatId);
-//    }
+            return;
+        }
+    }
 
-//    async private Task SendBeatsList(ITelegramBotClient botClient, long chatId)
-//    {
-//        string callBackId = "beat";
-//        List<List<InlineKeyboardButton>> buttons = new();
-//        foreach (var beat in Settings.Beats)
-//        {
-//            InlineKeyboardButton urlButton = new InlineKeyboardButton(beat);
-//            urlButton.CallbackData = $"{callBackId}:{beat}";
-//            buttons.Add(new List<InlineKeyboardButton> { urlButton });
-//        }
-//        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
+    private async Task CallbackQueryUpdate(ITelegramBotClient botClient, Update update, CancellationToken ct)
+    {
+        var chatId = update.CallbackQuery.Message.Chat.Id;
 
-//        await SendUniportentMessage(botClient, chatId, "Выберите ваше седство: ", keyboard);
-//    }
+        if (Chats[chatId].Disable) 
+        {
+            return;
+        }
 
-//    async private Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, string beat)
-//    {
-//        var chat = Chats[chatId];
-//        chat.SelectedBeatNum = Convert.ToInt32(beat); // Save selected target name
+        var messageId = update.CallbackQuery.Message.MessageId;
+        var data = update.CallbackQuery.Data.Split(":");
 
-//        // Remove beat keyboard
-//        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
-//        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat}");
+        if (data[0] == "target")
+        {
+            await SelectTargetName(botClient, chatId, messageId, data[1]);
+            return;
+        }
+        if (data[0] == "beat")
+        {
+            await SelectBeat(botClient, chatId, messageId, data[1]);
+            return;
+        }
+    }
 
-//        // Create audio
-//        await SendUniportentMessage(botClient, chatId, "Ваш дисс уже в разработке, ожидайте...");
-//        chat.Disable = true;
-//        string messageText;
-//        try
-//        {
-//            await CreateAndSendAuido(botClient, chatId);
-//            messageText = $"У вас осталось eще {chat.LeftAttempts} попыток";
-//        }
-//        catch(Exception ex)
-//        {
-//            chat.LeftAttempts++;
-//            messageText = $"Извините дисса не будет, Марк насрал в код(";
-//            if(chat.Role == TgRole.Admin)
-//                messageText += $", details: {ex.Message}";
-//        }
-//        await SendUniportentMessage(botClient, chatId, messageText);
-//        chat.Disable = false;
-//    }
+    #endregion
 
-//    async private Task CreateAndSendAuido(ITelegramBotClient botClient, long chatId)
-//    {
-//        var chat = Chats[chatId];
+    #region Main logic set
 
-//        // Create and save Audio
-//        MultiCreateResponse res = await Autocreator.AudioAutoCreateAndSave(
-//            "DissBot", chat.SelectedTarget, chat.SelectedBeatNum, 10, 5, 10
-//            );
-//        if (res.Error)
-//            throw new Exception($"MultiCreateResponse have an error: {res.Message}");
+    private async Task SendTargetNamesList(ITelegramBotClient botClient, long chatId)
+    {
+        var callbackId = "target";
+        List<List<InlineKeyboardButton>> buttons = new();
 
-//        // Get Audio 
-//        string audioNumStr = res.CreateAudioResponse.Name;
-//        int audioNum = Convert.ToInt32(audioNumStr.Split('.')[0]);
-//        byte[]? dissAudioData = await DTO.AudioRecord.GetAudioByNumber(
-//            "DissBot", res.CreatePoetryResponse.Name, audioNum
-//            );
-//        if (dissAudioData is null)
-//            throw new Exception($"byte[]? dissAudioData is null");
+        foreach (var targetName in _autogenerationOptions.Targets)
+        {
+            var urlButton = new InlineKeyboardButton(targetName);
+            urlButton.CallbackData = $"{callbackId}:{targetName}";
+            buttons.Add(new List<InlineKeyboardButton> { urlButton });
+        }
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
 
-//        // Send Audio
-//        try
-//        {
-//            using (Stream stream = new MemoryStream(dissAudioData))
-//            {
-//                var ifs = new InputFileStream(stream);
-//                await botClient.SendAudioAsync(chatId, ifs, performer: "AftaDi$$PraDuckSheng", title: $"Di$$ Ha {chat.SelectedTarget}a"); // important message
-//            }
-//        }
-//        catch(Exception ex)
-//        {
-//            throw new Exception($"Send as MemoryStream Audio error:  {ex.Message}");
-//        }
+        await SendUniportentMessage(botClient, chatId, "Выберите вашу цель: ", keyboard);
+    }
 
-//    }
+    private async Task SelectTargetName(ITelegramBotClient botClient, long chatId, int messageId, string targetName)
+    {
+        // save selected target name
+        Chats[chatId].SelectedTarget = targetName;
 
-//    async private Task SendUniportentMessage(ITelegramBotClient botClient, long chatId, string text, 
-//        InlineKeyboardMarkup? keyboard = null)
-//    {
-//        Message message;
-//        if (keyboard is not null)
-//            message = await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
-//        else
-//            message = await botClient.SendTextMessageAsync(chatId, text);
+        // remove targetName keyboard
+        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваша цель: {targetName}");
 
-//        Chats[chatId].UnimportantMessages.Add(message.MessageId);
-//    }
+        // set beat keyboard
+        await SendBeatsList(botClient, chatId);
+    }
 
-//    async private Task RemoveUnimportentMessages(ITelegramBotClient botClient, long chatId)
-//    {
-//        var chat = Chats[chatId];
-//        foreach (var messageId in chat.UnimportantMessages)
-//        {
-//            try
-//            {
-//                await botClient.DeleteMessageAsync(chatId, messageId);
-//            }
-//            catch { }
-//        }
-            
-//        chat.UnimportantMessages.Clear();
-//    }
+    private async Task SendBeatsList(ITelegramBotClient botClient, long chatId)
+    {
+        string callbackId = "beat";
+        List<List<InlineKeyboardButton>> buttons = new();
 
-//    // Error block
+        foreach (var beat in _autogenerationOptions.Beats)
+        {
+            var urlButton = new InlineKeyboardButton(beat.ToString());
+            urlButton.CallbackData = $"{callbackId}:{beat}";
+            buttons.Add(new List<InlineKeyboardButton> { urlButton });
+        }
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
 
-//    private void AddLog(string logText)
-//    {
-//        string logfilePath = PathMaster.TelegramBotLogFilePath();
-//        string text = System.IO.File.ReadAllText(logfilePath);
-//        text += $"{logText}\n\n";
-//        System.IO.File.WriteAllText(logfilePath, text);
-//    }
+        await SendUniportentMessage(botClient, chatId, "Выберите ваше седство: ", keyboard);
+    }
 
-//    private Task BotError(ITelegramBotClient botClient, Exception exception, CancellationToken token)
-//    {
-//        try
-//        {
-//            AddLog(exception.Message);
-//        }
-//        catch { }
-        
+    private async Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, string beat)
+    {
+        var chat = Chats[chatId];
+        chat.SelectedBeatNum = Convert.ToInt32(beat); // Save selected target name
 
-//        foreach (var chat in Chats)
-//        {
-//            if (chat.Value.Role == TgRole.Admin)
-//            {
-//                botClient.SendTextMessageAsync(chat.Key, $"TGBot have failed down, details: {exception.Message}");
-//            }
-//        }
+        // Remove beat keyboard
+        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat}");
 
-//        throw exception;
-//    }
-//}
+        // Create audio
+        await SendUniportentMessage(botClient, chatId, "Ваш дисс уже в разработке, ожидайте...");
+        chat.Disable = true;
+        string messageText;
+        try
+        {
+            await CreateAndSendAuido(botClient, chatId);
+            messageText = $"У вас осталось eще {chat.LeftAttempts} попыток";
+        }
+        catch (Exception ex)
+        {
+            chat.LeftAttempts++;
+            messageText = $"Извините дисса не будет, Марк насрал в код(";
+            if (chat.Role == TgRole.Admin) 
+            {
+                messageText += $", details: {ex.Message}";
+            }
+        }
+        await SendUniportentMessage(botClient, chatId, messageText);
+        chat.Disable = false;
+    }
 
+    private async Task CreateAndSendAuido(ITelegramBotClient botClient, long chatId)
+    {
+        var chat = Chats[chatId];
+
+        var request = new AutogenerationRequest
+        {
+            LinesCount = _autogenerationOptions.LinesCounts[1],
+            WordsInLineCount = _autogenerationOptions.WordsInLineCounts[1],
+            // SwitchLanguage = _autogenerationOptions.SwitchLanguages.First(),
+            // SwitchTimes = _autogenerationOptions.SwitchTimes.First(),
+            Target = chat.SelectedTarget,
+            // VoiceId = _autogenerationOptions.Voices.First(), // TODO: get VoiceId from user
+            BeatId = chat.SelectedBeatNum
+        };
+
+        var dissAudioData = await _autogenerationLogic.Autogenerate(request, _autogenerationOptions);
+        if (dissAudioData is null)
+        {
+            await SendUniportentMessage(botClient, chatId, "Autogeneration error...");
+        }
+
+        // Send Audio
+        try
+        {
+            using (Stream stream = new MemoryStream(dissAudioData))
+            {
+                var ifs = new InputFileStream(stream);
+                await botClient.SendAudioAsync(chatId, ifs, performer: "AftaDi$$PraDuckSheng", title: $"Di$$ Ha {chat.SelectedTarget}a"); // important message
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Send as MemoryStream Audio error:  {ex.Message}");
+        }
+
+    }
+
+    private async Task SendUniportentMessage(ITelegramBotClient botClient, long chatId, string text, InlineKeyboardMarkup? keyboard = null)
+    {
+        Message message;
+
+        if (keyboard is not null)
+        {
+            message = await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
+        }
+        else
+        {
+            message = await botClient.SendTextMessageAsync(chatId, text);
+        }
+
+        Chats[chatId].UnimportantMessages.Add(message.MessageId);
+    }
+
+    private async Task RemoveUnimportentMessages(ITelegramBotClient botClient, long chatId)
+    {
+        var chat = Chats[chatId];
+        foreach (var messageId in chat.UnimportantMessages)
+        {
+            try
+            {
+                await botClient.DeleteMessageAsync(chatId, messageId);
+            }
+            catch { }
+        }
+
+        chat.UnimportantMessages.Clear();
+    }
+
+    #endregion
+
+    #region Error block
+
+    private async Task BotError(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
+    {
+        await _userChatsMaster.AddLog(exception.Message);
+
+        foreach (var chat in Chats)
+        {
+            if (chat.Value.Role == TgRole.Admin)
+            {
+                botClient.SendTextMessageAsync(chat.Key, $"TGBot have failed down, details: {exception.Message}");
+            }
+        }
+
+        throw exception;
+    }
+
+    #endregion
+}
