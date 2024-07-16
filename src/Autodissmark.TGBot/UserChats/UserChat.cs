@@ -14,5 +14,6 @@ public class UserChat
     public int LeftAttempts { get; set; }
     public DateTime LastModify { get; set; } 
     public string SelectedTarget { get; set; }
-    public int SelectedBeatNum { get; set; }
+    public int SelectedBeatId { get; set; }
+    public int SelectedVoiceId { get; set; }
 }
