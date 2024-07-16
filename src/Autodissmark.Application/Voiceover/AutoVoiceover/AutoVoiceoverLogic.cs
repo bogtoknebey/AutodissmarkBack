@@ -15,20 +15,20 @@ public class AutoVoiceoverLogic : IAutoVoiceoverLogic
     private readonly string _acapellasPath;
     private readonly IAcapellaWriteRepository _writeRepository;
     private readonly ITextReadRepository _textReadRepository;
-    private readonly ITextToSpeach _textToSpeach;
+    private readonly Func<string, ITextToSpeach> _ttsChooser;
     private readonly IVoiceReadRepository _voiceReadRepository;
 
     public AutoVoiceoverLogic(
         IOptions<FilePathOptions> filePathOptions,
         IAcapellaWriteRepository writeRepository,
         ITextReadRepository textReadRepository,
-        ITextToSpeach textToSpeach,
+        Func<string, ITextToSpeach> ttsChooser,
         IVoiceReadRepository voiceReadRepository)
     {
         _writeRepository = writeRepository;
         _acapellasPath = filePathOptions.Value.AcapellasFolderPath;
         _textReadRepository = textReadRepository;
-        _textToSpeach = textToSpeach;
+        _ttsChooser = ttsChooser;
         _voiceReadRepository = voiceReadRepository;
     }
 
@@ -48,8 +48,10 @@ public class AutoVoiceoverLogic : IAutoVoiceoverLogic
         }
 
         // Create voiceover
+        var textToSpeach = _ttsChooser(voice.ArtistModel.Source);
         var ttsDTO = new GetAudioByTextDTO(text.Text, voice.ArtistModel.Name, voice.Speed, voice.Pitch);
-        var voiceoverAudioData = await _textToSpeach.GetAudioByText(ttsDTO);
+
+        var voiceoverAudioData = await textToSpeach.GetAudioByText(ttsDTO);
 
         if (voiceoverAudioData is null)
         {
