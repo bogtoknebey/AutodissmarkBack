@@ -43,3 +43,4 @@ src/Autodissmark.Application/obj
 /src/Autodissmark.TextProcessor/bin/Release/net8.0
 /src/Autodissmark.TextProcessorDataAccess/bin/Release/net8.0
 /src/Autodissmark.TGBot/bin/Release/net8.0
+/src/Autodissmark.API/data

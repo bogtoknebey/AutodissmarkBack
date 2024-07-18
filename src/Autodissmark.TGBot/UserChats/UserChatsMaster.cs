@@ -5,8 +5,8 @@ namespace Autodissmark.TGBot.UserChats;
 
 public class UserChatsMaster
 {
-    private const string LogFilePath = "../../data/telegram/log/log.txt";
-    private const string ChatsFolderPath = "../../data/telegram/userChats";
+    private const string LogFilePath = "./data/telegram/log/log.txt";
+    private const string ChatsFolderPath = "./data/telegram/userChats";
 
     private string ChatFilePath(long chatId) => $"{ChatsFolderPath}/{chatId}.txt";
 
