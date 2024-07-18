@@ -1,50 +1,74 @@
 ﻿using Autodissmark.ExternalServices.TextToSpeach.Contracts;
 using Autodissmark.ExternalServices.TextToSpeach.DTO;
 using System.Text;
+using System.Text.Json;
 
 namespace Autodissmark.ExternalServices.TextToSpeach.ApihostAPI;
 
 public class TextToSpeach : ITextToSpeach
 {
-    static async Task SendData(string url, string jsonData)
+    private const string Url = "https://apihost.ru/tts.php";
+    private const int CharLimit = 975;
+    private readonly Dictionary<string, int> _artistIdByName = new Dictionary<string, int>()
     {
-        using (HttpClient client = new HttpClient())
-        {
-            StringContent content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+        { "Костя",  3 },
+        { "Робот",  2070 }
+    };
 
-            HttpResponseMessage response = await client.PostAsync(url, content);
+    private HttpClient _client { get; set; }
 
-            if (response.IsSuccessStatusCode)
-            {
-                var responseStr = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Data sent successfully. responseStr: {responseStr}");
-            }
-            else
-            {
-                Console.WriteLine($"Failed to send data. Status code: {response.StatusCode}");
-            }
-        }
+    public TextToSpeach()
+    {
+        _client = new HttpClient();
+    }
+
+    private string PrepareText(string nativeText)
+    {
+        var preparedText = string.Join(' ', nativeText.Split('\r', '\n'));
+        preparedText = preparedText.Substring(0, Math.Min(CharLimit, preparedText.Length));
+
+        return preparedText;
+    }
+
+    private async Task<string> GetAudioUrl(string url, string jsonData)
+    {
+        StringContent content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = await _client.PostAsync(url, content);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        using JsonDocument doc = JsonDocument.Parse(json);
+        var audioFileUrl = doc.RootElement.GetProperty("audio").GetString();
+
+        return audioFileUrl;
+    }
+
+    private async Task<byte[]> DownloadAudioFileAsync(string url)
+    {
+        HttpResponseMessage response = await _client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
     public async Task<byte[]?> GetAudioByText(GetAudioByTextDTO dto)
     {
-        string url = "https://apihost.ru/tts.php";
-        string jsonData = "{\"data\":[{\"lang\":\"ru-RU\",\"speaker\":\"4\",\"emotion\":\"good\",\"text\":\"Романы на экраны и ты ты порочишь её криками а А ты варлам шаламов просто простопросто так не дарован а\\nА налетай покупай потребляй чё чё пидор на сделай пару\\nПару раз упал и больше больше борозд чем от оспы\",\"rate\":\"1.1\",\"pitch\":\"1.1\",\"type\":\"wav\",\"pause\":\"0\"}]}";
+        string jsonData = "" +
+            "{\"data\":[{" +
+                "\"lang\":\"ru-RU\"," +
+                $"\"speaker\":\"{_artistIdByName[dto.ArtistName]}\"," +
+                "\"emotion\":\"good\"," +
+                $"\"text\":\"{PrepareText(dto.Text)}\"," +
+                $"\"rate\":\"1.1\"," +
+                $"\"pitch\":\"0.8\"," +
+                "\"type\":\"wav\"," +
+                "\"pause\":\"0\"" +
+            "}]}";
 
-        try
-        {
-            await SendData(url, jsonData);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-        }
+        var audioFileUrl = await GetAudioUrl(Url, jsonData);
+        var audioFile = await DownloadAudioFileAsync(audioFileUrl);
 
-        return new byte[0];
-    }
-
-    async Task<byte[]?> ITextToSpeach.GetAudioByText(GetAudioByTextDTO dto)
-    {
-        throw new NotImplementedException();
+        return audioFile;
     }
 }

@@ -27,7 +27,7 @@ public class TgBotBuilder
         _userChatsMaster = new UserChatsMaster();
     }
 
-    private async Task ChangeConfigTest() 
+    private async Task ChangeTargetConfigTest() 
     {
         // before
         var beforeTarget = _autogenerationOptions.Targets[0];
@@ -53,8 +53,8 @@ public class TgBotBuilder
             SwitchLanguage = _autogenerationOptions.SwitchLanguages.First(),
             SwitchTimes = _autogenerationOptions.SwitchTimes.First(),
             Target = _autogenerationOptions.Targets.First(),
-            VoiceId = _autogenerationOptions.Voices.First(),
-            BeatId = _autogenerationOptions.Beats.First()
+            VoiceId = _autogenerationOptions.Voices.First().Id,
+            BeatId = _autogenerationOptions.Beats.First().Id
         };
 
         return await _autogenerationLogic.AutogenerateTest(request, _autogenerationOptions);
@@ -88,7 +88,7 @@ public class TgBotBuilder
         await tgBot.Setup();
         tgBot.Run();
 
-        //await ChangeConfigTest();
+        //await ChangeTargetConfigTest();
         //await ChangeUserChatsTest();
         //await AutogenerateTest();
 

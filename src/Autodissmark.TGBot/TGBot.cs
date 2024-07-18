@@ -14,12 +14,17 @@ namespace Autodissmark.TGBot;
 public class TgBot
 {
     private const int DailyAttemptsReloadTimeInHours = 12;
+
     private const string StartCommand = "/start";
     private const string ResetCommand = "/reset";
     private const string HelpCommand = "/help";
     private const string SaveCommand = "/save";
     private const string AddTagetCommand = "/add target ";
     private const string RemoveTargetCommand = "/remove target ";
+
+    private const string CallbackId_Target = "target";
+    private const string CallbackId_Beat = "beat";
+    private const string CallbackId_Voice = "voice";
 
     private TgBotSettingsMaster _tgBotSettingsMaster;
     private UserChatsMaster _userChatsMaster;
@@ -136,7 +141,7 @@ public class TgBot
 
             // do /start
             await SendUniportentMessage(botClient, chatId, "Вас приветсвтует Автодиссер!");
-            await SendTargetNamesList(botClient, chatId);
+            await SendMarkup(botClient, chatId, _autogenerationOptions.Targets, CallbackId_Target, "Выберите вашу цель: ");
             return;
         }
         if (message.Text == ResetCommand)
@@ -240,14 +245,31 @@ public class TgBot
         var messageId = update.CallbackQuery.Message.MessageId;
         var data = update.CallbackQuery.Data.Split(":");
 
-        if (data[0] == "target")
+        if (data[0] == CallbackId_Target)
         {
-            await SelectTargetName(botClient, chatId, messageId, data[1]);
+            await SelectTarget(botClient, chatId, messageId, data[1]);
             return;
         }
-        if (data[0] == "beat")
+        if (data[0] == CallbackId_Beat)
         {
-            await SelectBeat(botClient, chatId, messageId, data[1]);
+            var beat = new OptionRow() 
+            { 
+                Id = Convert.ToInt32(data[1]), 
+                Name = data[2] 
+            };
+
+            await SelectBeat(botClient, chatId, messageId, beat);
+            return;
+        }
+        if (data[0] == CallbackId_Voice)
+        {
+            var voice = new OptionRow()
+            {
+                Id = Convert.ToInt32(data[1]),
+                Name = data[2]
+            };
+
+            await SelectVoice(botClient, chatId, messageId, voice);
             return;
         }
     }
@@ -255,62 +277,81 @@ public class TgBot
     #endregion
 
     #region Main logic set
-
-    private async Task SendTargetNamesList(ITelegramBotClient botClient, long chatId)
+    private InlineKeyboardMarkup GetMarkup<T>(List<T> items, string callbackId)
     {
-        var callbackId = "target";
         List<List<InlineKeyboardButton>> buttons = new();
 
-        foreach (var targetName in _autogenerationOptions.Targets)
+        foreach (var item in items)
         {
-            var urlButton = new InlineKeyboardButton(targetName);
-            urlButton.CallbackData = $"{callbackId}:{targetName}";
+            InlineKeyboardButton urlButton;
+
+            if (item is OptionRow optionRow)
+            {
+                urlButton = new(optionRow.Name);
+                urlButton.CallbackData = $"{callbackId}:{optionRow.Id}:{optionRow.Name}";
+            }
+            else
+            {
+                urlButton = new(item.ToString());
+                urlButton.CallbackData = $"{callbackId}:{item}";
+            }
+
             buttons.Add(new List<InlineKeyboardButton> { urlButton });
         }
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
 
-        await SendUniportentMessage(botClient, chatId, "Выберите вашу цель: ", keyboard);
+        return new InlineKeyboardMarkup(buttons);
     }
 
-    private async Task SelectTargetName(ITelegramBotClient botClient, long chatId, int messageId, string targetName)
+    private async Task SendMarkup<T>(ITelegramBotClient botClient, long chatId, List<T> items, string callbackId, string markupHeader)
     {
-        // save selected target name
+        var markup = GetMarkup(items, callbackId);
+        await SendUniportentMessage(botClient, chatId, markupHeader, markup);
+    }
+
+    private async Task SelectTarget(ITelegramBotClient botClient, long chatId, int messageId, string targetName)
+    {
+        // Save selected target name
         Chats[chatId].SelectedTarget = targetName;
 
-        // remove targetName keyboard
+        // Remove targetName markup
         await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
         await botClient.EditMessageTextAsync(chatId, messageId, $"Ваша цель: {targetName}");
 
-        // set beat keyboard
-        await SendBeatsList(botClient, chatId);
+        // Set beat markup
+        await SendMarkup(botClient, chatId, _autogenerationOptions.Beats, CallbackId_Beat, "Выберите ваше седство: ");
     }
 
-    private async Task SendBeatsList(ITelegramBotClient botClient, long chatId)
+    private async Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, OptionRow beat)
     {
-        string callbackId = "beat";
-        List<List<InlineKeyboardButton>> buttons = new();
+        // Save selected beat
+        var chat = Chats[chatId];
+        chat.SelectedBeatId = Convert.ToInt32(beat.Id);
 
-        foreach (var beat in _autogenerationOptions.Beats)
-        {
-            var urlButton = new InlineKeyboardButton(beat.ToString());
-            urlButton.CallbackData = $"{callbackId}:{beat}";
-            buttons.Add(new List<InlineKeyboardButton> { urlButton });
-        }
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(buttons);
+        // Remove beat markup
+        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat.Name}");
 
-        await SendUniportentMessage(botClient, chatId, "Выберите ваше седство: ", keyboard);
+        // Set voice markup
+        await SendMarkup(botClient, chatId, _autogenerationOptions.Voices, CallbackId_Voice, "Выберите исполнителя: ");
     }
 
-    private async Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, string beat)
+    private async Task SelectVoice(ITelegramBotClient botClient, long chatId, int messageId, OptionRow voice)
+    {
+        // Save selected voice
+        var chat = Chats[chatId];
+        chat.SelectedVoiceId = Convert.ToInt32(voice.Id);
+
+        // Remove voice markup
+        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваш исполнитель: {voice.Name}");
+
+        // Finally create audio
+        await SendAudio(botClient, chatId);
+    }
+
+    private async Task SendAudio(ITelegramBotClient botClient, long chatId)
     {
         var chat = Chats[chatId];
-        chat.SelectedBeatNum = Convert.ToInt32(beat); // Save selected target name
-
-        // Remove beat keyboard
-        await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
-        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat}");
-
-        // Create audio
         await SendUniportentMessage(botClient, chatId, "Ваш дисс уже в разработке, ожидайте...");
         chat.Disable = true;
         string messageText;
@@ -323,7 +364,7 @@ public class TgBot
         {
             chat.LeftAttempts++;
             messageText = $"Извините дисса не будет, Марк насрал в код(";
-            if (chat.Role == TgRole.Admin) 
+            if (chat.Role == TgRole.Admin)
             {
                 messageText += $", details: {ex.Message}";
             }
@@ -343,8 +384,8 @@ public class TgBot
             // SwitchLanguage = _autogenerationOptions.SwitchLanguages.First(),
             // SwitchTimes = _autogenerationOptions.SwitchTimes.First(),
             Target = chat.SelectedTarget,
-            // VoiceId = _autogenerationOptions.Voices.First(), // TODO: get VoiceId from user
-            BeatId = chat.SelectedBeatNum
+            VoiceId = chat.SelectedVoiceId,
+            BeatId = chat.SelectedBeatId
         };
 
         var dissAudioData = await _autogenerationLogic.Autogenerate(request, _autogenerationOptions);
@@ -353,20 +394,12 @@ public class TgBot
             await SendUniportentMessage(botClient, chatId, "Autogeneration error...");
         }
 
-        // Send Audio
-        try
+        // Send audio
+        using (Stream stream = new MemoryStream(dissAudioData))
         {
-            using (Stream stream = new MemoryStream(dissAudioData))
-            {
-                var ifs = new InputFileStream(stream);
-                await botClient.SendAudioAsync(chatId, ifs, performer: "AftaDi$$PraDuckSheng", title: $"Di$$ Ha {chat.SelectedTarget}a"); // important message
-            }
+            var ifs = new InputFileStream(stream);
+            await botClient.SendAudioAsync(chatId, ifs, performer: "AftaDi$$PraDuckSheng", title: $"Di$$ Ha {chat.SelectedTarget}a"); // important message
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Send as MemoryStream Audio error:  {ex.Message}");
-        }
-
     }
 
     private async Task SendUniportentMessage(ITelegramBotClient botClient, long chatId, string text, InlineKeyboardMarkup? keyboard = null)

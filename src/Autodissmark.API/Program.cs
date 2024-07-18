@@ -47,7 +47,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<TgBotBuilder>();
 builder.Services.AddScoped<IWebDriverTaskBuilder, WebDriverTaskBuilder>();
 builder.Services.AddScoped<ITranslate, Translator>();
-builder.Services.AddScoped<ITextToSpeach, Autodissmark.ExternalServices.TextToSpeach.Voxworker.TextToSpeach>();
 builder.Services.AddScoped<IAuthorReadRepository, AuthorReadRepository>();
 builder.Services.AddScoped<IAuthorWriteRepository, AuthorWriteRepository>();
 builder.Services.AddScoped<IAuthorLogic, AuthorLogic>();
@@ -76,6 +75,19 @@ builder.Services.AddScoped<IBeatReadRepository, BeatReadRepository>();
 builder.Services.AddScoped<IDissReadRepository, DissReadRepository>();
 builder.Services.AddScoped<IDissWriteRepository, DissWriteRepository>();
 builder.Services.AddScoped<ILoginLogic, LoginLogic>();
+
+builder.Services.AddScoped<Autodissmark.ExternalServices.TextToSpeach.Voxworker.TextToSpeach>();
+builder.Services.AddScoped<Autodissmark.ExternalServices.TextToSpeach.ApihostAPI.TextToSpeach>();
+builder.Services.AddScoped<Func<string, ITextToSpeach>>(serviceProvider => key =>
+{
+    var sp = serviceProvider.CreateScope().ServiceProvider;
+    return key switch
+    {
+        "Voxworker" => sp.GetRequiredService<Autodissmark.ExternalServices.TextToSpeach.Voxworker.TextToSpeach>(),
+        "Apihost" => sp.GetRequiredService<Autodissmark.ExternalServices.TextToSpeach.ApihostAPI.TextToSpeach>(),
+        _ => throw new KeyNotFoundException($"Service for key '{key}' is not registered.")
+    };
+});
 #endregion
 
 #region MsSql configuration
