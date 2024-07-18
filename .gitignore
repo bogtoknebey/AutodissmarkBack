@@ -36,3 +36,10 @@ src/Autodissmark.Application/obj
 /src/Autodissmark.TGBot/tgBotSettings.json
 /src/Autodissmark.TGBot/Settings/tgBotSettings.json
 /src/Autodissmark.TGBot/TgSettings/tgBotSettings.json
+/src/Autodissmark.API/Properties/PublishProfiles
+/src/Autodissmark.ApplicationDataAccess/bin/Release/net8.0
+/src/Autodissmark.AudioMixer/bin/Release/net8.0
+/src/Autodissmark.Domain/bin/Release/net8.0
+/src/Autodissmark.TextProcessor/bin/Release/net8.0
+/src/Autodissmark.TextProcessorDataAccess/bin/Release/net8.0
+/src/Autodissmark.TGBot/bin/Release/net8.0
