@@ -66,14 +66,14 @@ public class AutogenerationLogic
             len = options.Voices.Count;
             randomNum = Random.Next(0, len);
 
-            request.VoiceId = options.Voices[randomNum];
+            request.VoiceId = options.Voices[randomNum].Id;
         }
         if (request.BeatId is null)
         {
             len = options.Beats.Count;
             randomNum = Random.Next(0, len);
 
-            request.BeatId = options.Beats[randomNum];
+            request.BeatId = options.Beats[randomNum].Id;
         }
     }
 
