@@ -252,12 +252,24 @@ public class TgBot
         }
         if (data[0] == CallbackId_Beat)
         {
-            await SelectBeat(botClient, chatId, messageId, data[1]);
+            var beat = new OptionRow() 
+            { 
+                Id = Convert.ToInt32(data[1]), 
+                Name = data[2] 
+            };
+
+            await SelectBeat(botClient, chatId, messageId, beat);
             return;
         }
         if (data[0] == CallbackId_Voice)
         {
-            await SelectVoice(botClient, chatId, messageId, data[1]);
+            var voice = new OptionRow()
+            {
+                Id = Convert.ToInt32(data[1]),
+                Name = data[2]
+            };
+
+            await SelectVoice(botClient, chatId, messageId, voice);
             return;
         }
     }
@@ -271,8 +283,19 @@ public class TgBot
 
         foreach (var item in items)
         {
-            var urlButton = new InlineKeyboardButton(item.ToString());
-            urlButton.CallbackData = $"{callbackId}:{item}";
+            InlineKeyboardButton urlButton;
+
+            if (item is OptionRow optionRow)
+            {
+                urlButton = new(optionRow.Name);
+                urlButton.CallbackData = $"{callbackId}:{optionRow.Id}:{optionRow.Name}";
+            }
+            else
+            {
+                urlButton = new(item.ToString());
+                urlButton.CallbackData = $"{callbackId}:{item}";
+            }
+
             buttons.Add(new List<InlineKeyboardButton> { urlButton });
         }
 
@@ -298,29 +321,29 @@ public class TgBot
         await SendMarkup(botClient, chatId, _autogenerationOptions.Beats, CallbackId_Beat, "Выберите ваше седство: ");
     }
 
-    private async Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, string beat)
+    private async Task SelectBeat(ITelegramBotClient botClient, long chatId, int messageId, OptionRow beat)
     {
         // Save selected beat
         var chat = Chats[chatId];
-        chat.SelectedBeatId = Convert.ToInt32(beat);
+        chat.SelectedBeatId = Convert.ToInt32(beat.Id);
 
         // Remove beat markup
         await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
-        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat}");
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваше средство: {beat.Name}");
 
         // Set voice markup
         await SendMarkup(botClient, chatId, _autogenerationOptions.Voices, CallbackId_Voice, "Выберите исполнителя: ");
     }
 
-    private async Task SelectVoice(ITelegramBotClient botClient, long chatId, int messageId, string voice)
+    private async Task SelectVoice(ITelegramBotClient botClient, long chatId, int messageId, OptionRow voice)
     {
         // Save selected voice
         var chat = Chats[chatId];
-        chat.SelectedVoiceId = Convert.ToInt32(voice);
+        chat.SelectedVoiceId = Convert.ToInt32(voice.Id);
 
         // Remove voice markup
         await botClient.EditMessageReplyMarkupAsync(chatId, messageId);
-        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваш исполнитель: {voice}");
+        await botClient.EditMessageTextAsync(chatId, messageId, $"Ваш исполнитель: {voice.Name}");
 
         // Finally create audio
         await SendAudio(botClient, chatId);
