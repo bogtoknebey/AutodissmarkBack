@@ -15,7 +15,7 @@ public static class TranslateSettings
         [Language.Chinese] = "zh-TW",
     };
 
-    public static int DefaultDelayInSeconds = 20;
+    public static int DefaultDelayInSeconds = 10;
 }
 
 public enum Language
