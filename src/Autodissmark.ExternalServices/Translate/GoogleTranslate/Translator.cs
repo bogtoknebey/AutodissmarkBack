@@ -26,7 +26,7 @@ public class Translator : ITranslate
         var switchBtn = TranslateSettings.SwitchBtnXStr;
 
         await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds);
-        await _webDriverTaskBuilder.Click(consentBtnXPath);
+        await _webDriverTaskBuilder.ClickIfThere(consentBtnXPath);
         await _webDriverTaskBuilder.InputText(inputTextAreaXPath, text, switchBtn, 500);
         await _webDriverTaskBuilder.Click(switchBtn, SwitchDelay, switchTimes);
         var result = await _webDriverTaskBuilder.OutputText(outputTextAreaXPath, 3000, switchBtn, 500);

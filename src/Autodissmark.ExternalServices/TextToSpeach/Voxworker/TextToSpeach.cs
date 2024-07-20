@@ -32,7 +32,7 @@ public class TextToSpeach : ITextToSpeach
         Directory.CreateDirectory(downloadDirectory);
 
         await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds, downloadDirectory);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.ConsentBtnXStr);
+        await _webDriverTaskBuilder.ClickIfThere(TextToSpeachSettings.ConsentBtnXStr);
         await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoiceSelectXStr);
         await _webDriverTaskBuilder.Click(TextToSpeachSettings.ArtistNamesXStrs[dto.ArtistName]);
         await _webDriverTaskBuilder.Click(TextToSpeachSettings.SpeedSelectXStr);
