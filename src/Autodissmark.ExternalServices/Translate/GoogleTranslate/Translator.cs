@@ -25,21 +25,29 @@ public class Translator : ITranslate
         var outputTextAreaXPath = inputTextAreaXPath;
         var switchBtn = TranslateSettings.SwitchBtnXStr;
 
-        await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds);
-        await _webDriverTaskBuilder.ClickIfThere(consentBtnXPath);
-        await _webDriverTaskBuilder.InputText(inputTextAreaXPath, text, switchBtn, 500);
-        await _webDriverTaskBuilder.Click(switchBtn, SwitchDelay, switchTimes);
-        var result = await _webDriverTaskBuilder.OutputText(outputTextAreaXPath, 3000, switchBtn, 500);
-
-        if (result.ComputeCyrillicPercentage() < 0.5)
+        try
         {
             await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds);
-            await _webDriverTaskBuilder.Click(consentBtnXPath);
-            await _webDriverTaskBuilder.InputText(inputTextAreaXPath, result, switchBtn, 500);
-            await _webDriverTaskBuilder.Click(switchBtn, SwitchDelay, 1);
-            result = await _webDriverTaskBuilder.OutputText(outputTextAreaXPath, 3000, switchBtn, 500); ;
-        }
+            await _webDriverTaskBuilder.ClickIfThere(consentBtnXPath);
+            await _webDriverTaskBuilder.InputText(inputTextAreaXPath, text, switchBtn, 500);
+            await _webDriverTaskBuilder.Click(switchBtn, SwitchDelay, switchTimes);
+            var result = await _webDriverTaskBuilder.OutputText(outputTextAreaXPath, 3000, switchBtn, 500);
 
-        return result;
+            if (result.ComputeCyrillicPercentage() < 0.5)
+            {
+                _webDriverTaskBuilder.Close();
+                await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds);
+                await _webDriverTaskBuilder.Click(consentBtnXPath);
+                await _webDriverTaskBuilder.InputText(inputTextAreaXPath, result, switchBtn, 500);
+                await _webDriverTaskBuilder.Click(switchBtn, SwitchDelay, 1);
+                result = await _webDriverTaskBuilder.OutputText(outputTextAreaXPath, 3000, switchBtn, 500);
+            }
+
+            return result;
+        }
+        finally
+        {
+            _webDriverTaskBuilder.Close();
+        }
     }
 }

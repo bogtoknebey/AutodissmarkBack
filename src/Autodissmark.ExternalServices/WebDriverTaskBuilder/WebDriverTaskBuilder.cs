@@ -121,25 +121,19 @@ public class WebDriverTaskBuilder : IWebDriverTaskBuilder
 
         var reuslt = element.GetAttribute("value");
 
-        _driver.Close();
-        _driver.Quit();
         return reuslt;
     }
 
-    public async Task<byte[]> OutputFirstByPatternDownladedFile(string downloadDirectory, string searchPattern = "*.*")
+    public byte[] OutputFirstByPatternDownladedFile(string downloadDirectory, string searchPattern = "*.*")
     {
         var filePath = Directory.GetFiles(downloadDirectory, "*.mp3")[0];
+        return File.ReadAllBytes(filePath);
+    }
 
-        byte[] res = File.ReadAllBytes(filePath);
-        // Directory.Delete(downloadDirectory, true);
-
-        await Task.Run(() =>
-        {
-            _driver.Close();
-            _driver.Quit();
-        });
-
-        return res;
+    public void Close()
+    {
+        _driver.Close();
+        _driver.Quit();
     }
 
     private async Task<IWebElement> GetElement(string xPath)
