@@ -9,6 +9,8 @@ public interface IWebDriverTaskBuilder
     Task InputText(string xPath, string text, string? markerXPath = null, int? afterMarkerApearDelay = null);
     Task ClearInput(string xPath);
     Task<string> OutputText(string xPath, int totalApearDelay, string? markerXPath = null, int? afterMarkerApearDelay = null);
-    Task<byte[]> OutputFirstByPatternDownladedFile(string downloadDirectory, string searchPattern = "*.*");
     Task WaitForDownladingFile(string downloadDirectory, string searchPattern = "*.*");
+    byte[] OutputFirstByPatternDownladedFile(string downloadDirectory, string searchPattern = "*.*");
+    void Close();
+    
 }

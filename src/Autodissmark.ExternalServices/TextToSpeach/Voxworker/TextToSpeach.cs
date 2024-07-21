@@ -31,20 +31,27 @@ public class TextToSpeach : ITextToSpeach
         var downloadDirectory = Path.Combine(_tempPath, $"{DateTime.Now.Ticks}");
         Directory.CreateDirectory(downloadDirectory);
 
-        await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds, downloadDirectory);
-        await _webDriverTaskBuilder.ClickIfThere(TextToSpeachSettings.ConsentBtnXStr);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoiceSelectXStr);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.ArtistNamesXStrs[dto.ArtistName]);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.SpeedSelectXStr);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoiceSpeedsXStrs[dto.VoiceSpeed]);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.PitchSelectXStr);
-        await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoicePitchXStrs[dto.VoicePitch]);
-        await _webDriverTaskBuilder.ClearInput(inputTextAreaXStr);
-        await _webDriverTaskBuilder.InputText(inputTextAreaXStr, dto.Text);
-        await _webDriverTaskBuilder.Click(downloadButtonXStr);
-        await _webDriverTaskBuilder.WaitForDownladingFile(downloadDirectory, "*.mp3");
-        var result = await _webDriverTaskBuilder.OutputFirstByPatternDownladedFile(downloadDirectory, ".mp3");
+        try
+        {
+            await _webDriverTaskBuilder.SetLink(link, defaultDelayInSeconds, downloadDirectory);
+            await _webDriverTaskBuilder.ClickIfThere(TextToSpeachSettings.ConsentBtnXStr);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoiceSelectXStr);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.ArtistNamesXStrs[dto.ArtistName]);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.SpeedSelectXStr);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoiceSpeedsXStrs[dto.VoiceSpeed]);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.PitchSelectXStr);
+            await _webDriverTaskBuilder.Click(TextToSpeachSettings.VoicePitchXStrs[dto.VoicePitch]);
+            await _webDriverTaskBuilder.ClearInput(inputTextAreaXStr);
+            await _webDriverTaskBuilder.InputText(inputTextAreaXStr, dto.Text);
+            await _webDriverTaskBuilder.Click(downloadButtonXStr);
+            await _webDriverTaskBuilder.WaitForDownladingFile(downloadDirectory, "*.mp3");
+            var result = _webDriverTaskBuilder.OutputFirstByPatternDownladedFile(downloadDirectory, ".mp3");
 
-        return result;
+            return result;
+        }
+        finally
+        {
+            _webDriverTaskBuilder.Close();
+        }
     }
 }
