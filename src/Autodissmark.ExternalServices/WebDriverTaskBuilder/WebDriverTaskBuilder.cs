@@ -59,6 +59,15 @@ public class WebDriverTaskBuilder : IWebDriverTaskBuilder
         }
     }
 
+    public async Task ClickIfThere(string xPath)
+    {
+        try
+        {
+            await Click(xPath);
+        }
+        catch { }
+    }
+
     public async Task InputText(string xPath, string text, string? markerXPath = null, int? afterMarkerApearDelay = null)
     {
         IWebElement element = await GetElement(xPath);

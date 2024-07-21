@@ -54,32 +54,5 @@ namespace Autodissmark.API.Controllers
                 return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
             }
         }
-
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost("auth-test-1")]
-        public async Task<IActionResult> AuthTest1(CancellationToken ct)
-        {
-            var userId = HttpContext.GetUserId();
-            var role = HttpContext.GetUserRole();
-
-            return Ok(new SuccessResponse<string>($"Here is user with id:{userId} and role:{role}"));
-        }
-
-        
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [Authorize(Roles = nameof(Role.Admin))]
-        [HttpPost("auth-test-2")]
-        public async Task<IActionResult> AuthTest2(CancellationToken ct)
-        {
-            return Ok(new SuccessResponse<string>("aaa"));
-        }
-
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [Authorize(Roles = nameof(Role.Admin) + "," + nameof(Role.User))]
-        [HttpPost("auth-test-3")]
-        public async Task<IActionResult> AuthTest3(CancellationToken ct)
-        {
-            return Ok(new SuccessResponse<string>("aaa"));
-        }
     }
 }
