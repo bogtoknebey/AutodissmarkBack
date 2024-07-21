@@ -26,6 +26,11 @@ public class TgBot
     private const string CallbackId_Beat = "beat";
     private const string CallbackId_Voice = "voice";
 
+    private const int Bot_CloseToRun_Delay = 0;
+    private const int Bot_BetweenRestartAttemts_Delay = 300000;
+    private const int Bot_AfterRestartIgnoring_Delay = 0;
+
+    private DateTime _lastStartTime;
     private TgBotSettingsMaster _tgBotSettingsMaster;
     private UserChatsMaster _userChatsMaster;
     private ApiOptions _apiOptions;
@@ -61,6 +66,7 @@ public class TgBot
 
         var botClient = new TelegramBotClient(_telegramOptions.BotKey);
         botClient.StartReceiving(BotUpdate, BotError);
+        _lastStartTime = DateTime.UtcNow;
     }
 
     #endregion
@@ -83,6 +89,13 @@ public class TgBot
 
     private async Task BotUpdate(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
+        if (DateTime.UtcNow.AddMilliseconds(-Bot_AfterRestartIgnoring_Delay) < _lastStartTime)
+        {
+            return;
+        }
+
+        await _userChatsMaster.AddLog($"BotUpdate was called. Utc time: {DateTime.UtcNow}");
+
         if (update.Type == UpdateType.Message)
         {
             MessageUpdate(botClient, update, ct);
@@ -433,23 +446,55 @@ public class TgBot
         chat.UnimportantMessages.Clear();
     }
 
+    private async Task SendMessageForAllAdmins(ITelegramBotClient botClient, string message)
+    {
+        foreach (var chat in Chats)
+        {
+            if (chat.Value.Role == TgRole.Admin)
+            {
+                try
+                {
+                    await botClient.SendTextMessageAsync(chat.Key, message);
+                }
+                catch { }
+            }
+        }
+    }
+
     #endregion
 
     #region Error block
 
     private async Task BotError(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
     {
-        await _userChatsMaster.AddLog(exception.Message);
+        await _userChatsMaster.AddLog($"BotError was called. Utc time: {DateTime.UtcNow}, Exception Message: {exception.Message}");
+        await SendMessageForAllAdmins(botClient, $"Bot failed down, Exception Message: {exception.Message}");
 
-        foreach (var chat in Chats)
+        while (true)
         {
-            if (chat.Value.Role == TgRole.Admin)
+            try
             {
-                botClient.SendTextMessageAsync(chat.Key, $"TGBot have failed down, details: {exception.Message}");
+                await RestartBot(botClient, ct);
+
+                await _userChatsMaster.AddLog($"Bot was restarted. Utc time: {DateTime.UtcNow}");
+                await SendMessageForAllAdmins(botClient, $"Bot was restarted. Utc time: {DateTime.UtcNow}");
+            }
+            catch (Exception ex)
+            {
+                await _userChatsMaster.AddLog($"Bot Restart failed down. Utc time: {DateTime.UtcNow}, Exception Message: {ex.Message}");
+                await SendMessageForAllAdmins(botClient, $"Bot Restart failed down. Utc time: {DateTime.UtcNow}, Exception Message: {ex.Message}");
+
+                await Task.Delay(Bot_BetweenRestartAttemts_Delay, ct);
             }
         }
 
-        throw exception;
+    }
+
+    private async Task RestartBot(ITelegramBotClient botClient, CancellationToken ct)
+    {
+        await botClient.CloseAsync(ct);
+        await Task.Delay(Bot_CloseToRun_Delay, ct);
+        Run();
     }
 
     #endregion
