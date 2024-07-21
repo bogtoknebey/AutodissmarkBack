@@ -47,7 +47,7 @@ public class UserChatsMaster
     {
         string text = File.ReadAllText(LogFilePath);
         text += $"{logText}\n\n";
-        File.WriteAllText(LogFilePath, text);
+        await File.WriteAllTextAsync(LogFilePath, text);
         return true;
     }
 }
