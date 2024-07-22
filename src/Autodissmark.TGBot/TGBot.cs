@@ -477,6 +477,7 @@ public class TgBot
                 await RestartBot(botClient, ct);
 
                 await _userChatsMaster.AddLog($"Bot was restarted. Utc time: {DateTime.UtcNow}");
+                await Task.Delay(Bot_AfterRestartIgnoring_Delay + 5000, ct);
                 await SendMessageForAllAdmins(botClient, $"Bot was restarted. Utc time: {DateTime.UtcNow}");
             }
             catch (Exception ex)
