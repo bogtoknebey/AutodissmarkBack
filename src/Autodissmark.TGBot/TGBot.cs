@@ -30,6 +30,7 @@ public class TgBot
     private const int Bot_BetweenRestartAttemts_Delay = 300000;
     private const int Bot_AfterRestartIgnoring_Delay = 0;
 
+    private TelegramBotClient _botClient;
     private DateTime _lastStartTime;
     private TgBotSettingsMaster _tgBotSettingsMaster;
     private UserChatsMaster _userChatsMaster;
@@ -64,8 +65,8 @@ public class TgBot
             throw new Exception("Cannot run tgBot because of empty Chats.");
         }
 
-        var botClient = new TelegramBotClient(_telegramOptions.BotKey);
-        botClient.StartReceiving(BotUpdate, BotError);
+        _botClient = new TelegramBotClient(_telegramOptions.BotKey);
+        _botClient.StartReceiving(BotUpdate, BotError);
         _lastStartTime = DateTime.UtcNow;
     }
 
@@ -468,22 +469,22 @@ public class TgBot
     private async Task BotError(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
     {
         await _userChatsMaster.AddLog($"BotError was called. Utc time: {DateTime.UtcNow}, Exception Message: {exception.Message}");
-        await SendMessageForAllAdmins(botClient, $"Bot failed down, Exception Message: {exception.Message}");
+        await SendMessageForAllAdmins(_botClient, $"Bot failed down, Exception Message: {exception.Message}");
 
         while (true)
         {
             try
             {
-                await RestartBot(botClient, ct);
+                await RestartBot(ct);
 
                 await _userChatsMaster.AddLog($"Bot was restarted. Utc time: {DateTime.UtcNow}");
                 await Task.Delay(Bot_AfterRestartIgnoring_Delay + 5000, ct);
-                await SendMessageForAllAdmins(botClient, $"Bot was restarted. Utc time: {DateTime.UtcNow}");
+                await SendMessageForAllAdmins(_botClient, $"Bot was restarted. Utc time: {DateTime.UtcNow}");
             }
             catch (Exception ex)
             {
                 await _userChatsMaster.AddLog($"Bot Restart failed down. Utc time: {DateTime.UtcNow}, Exception Message: {ex.Message}");
-                await SendMessageForAllAdmins(botClient, $"Bot Restart failed down. Utc time: {DateTime.UtcNow}, Exception Message: {ex.Message}");
+                await SendMessageForAllAdmins(_botClient, $"Bot Restart failed down. Utc time: {DateTime.UtcNow}, Exception Message: {ex.Message}");
 
                 await Task.Delay(Bot_BetweenRestartAttemts_Delay, ct);
             }
@@ -491,9 +492,9 @@ public class TgBot
 
     }
 
-    private async Task RestartBot(ITelegramBotClient botClient, CancellationToken ct)
+    private async Task RestartBot(CancellationToken ct)
     {
-        await botClient.CloseAsync(ct);
+        await _botClient.CloseAsync(ct);
         await Task.Delay(Bot_CloseToRun_Delay, ct);
         Run();
     }
