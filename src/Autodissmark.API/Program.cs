@@ -40,6 +40,8 @@ using Autodissmark.Core.Constants;
 using Autodissmark.Domain.Enums;
 using Autodissmark.TGBot;
 
+const string CorsPolicyName_AllowAnyOrigin = "AllowAnyOrigin";
+
 var builder = WebApplication.CreateBuilder(args);
 
 #region DI
@@ -193,7 +195,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins",
+    options.AddPolicy(CorsPolicyName_AllowAnyOrigin,
         policy =>
         {
             policy.AllowAnyOrigin()
@@ -233,7 +235,7 @@ lifetime.ApplicationStarted.Register(() =>
 });
 #endregion
 
-
+app.UseCors(CorsPolicyName_AllowAnyOrigin);
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
