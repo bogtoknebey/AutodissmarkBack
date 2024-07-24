@@ -191,6 +191,17 @@ builder.Services.AddAuthorization(options =>
 });
 #endregion
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
