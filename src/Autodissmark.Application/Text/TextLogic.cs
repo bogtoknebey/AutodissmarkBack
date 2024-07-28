@@ -34,6 +34,16 @@ public class TextLogic : ITextLogic
         return await _readRepository.GetById(id, ct);
     }
 
+    public async Task<ICollection<TextModel>> GetTextsPage(int authorId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        return await _readRepository.GetTextsPage(authorId, pageSize, pageNumber, ct);
+    }
+
+    public async Task<ICollection<TextModel>> GetAllTexts(int authorId, CancellationToken ct)
+    {
+        return await _readRepository.GetAllTexts(authorId, ct);
+    }
+
     public async Task<int> GetTextsCount(int authorId, CancellationToken ct)
     {
         return await _readRepository.GetTextsCount(authorId, ct);

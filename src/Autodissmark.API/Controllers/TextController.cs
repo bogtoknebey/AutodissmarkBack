@@ -62,6 +62,36 @@ public class TextController : ControllerBase
         }
     }
 
+    [HttpGet("get-texts-page")]
+    public async Task<IActionResult> GetTextsPage(int authorId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        try
+        {
+            // TODO: check author's permissions
+            var texts = await _textLogic.GetTextsPage(authorId, pageSize, pageNumber, ct);
+            return Ok(new SuccessResponse<ICollection<TextModel>>(texts));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
+        }
+    }
+
+    [HttpGet("get-all-texts")]
+    public async Task<IActionResult> GetAllTexts(int authorId, CancellationToken ct)
+    {
+        try
+        {
+            // TODO: check author's permissions
+            var texts = await _textLogic.GetAllTexts(authorId, ct);
+            return Ok(new SuccessResponse<ICollection<TextModel>>(texts));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
+        }
+    }
+
     [HttpGet("get-texts-count")]
     public async Task<IActionResult> GetTextsCount(int authorId, CancellationToken ct)
     {
