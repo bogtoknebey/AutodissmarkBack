@@ -86,7 +86,7 @@ public class TgBotBuilder
 
         var tgBot = new TgBot();
         await tgBot.Setup();
-        tgBot.Run();
+        await tgBot.RunAsync();
 
         //await ChangeTargetConfigTest();
         //await ChangeUserChatsTest();
