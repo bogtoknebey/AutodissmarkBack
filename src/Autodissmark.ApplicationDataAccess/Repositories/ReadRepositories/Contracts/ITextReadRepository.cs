@@ -6,6 +6,7 @@ public interface ITextReadRepository
 {
     Task<TextModel> GetById(int id, CancellationToken ct = default);
     Task<int> GetTextsCount(int authorId, CancellationToken ct = default);
+    Task<ICollection<TextModel>> GetTextsPage(int authorId, int pageSize, int pageNumber, CancellationToken ct = default);
     Task<ICollection<TextModel>> GetRandomTexts(int authorId, int textsCount, CancellationToken ct = default);
     Task<ICollection<TextModel>> GetAllTexts(int authorId, CancellationToken ct = default);
     Task<int> GetAuthorId(int id, CancellationToken ct = default);
