@@ -49,7 +49,8 @@ public class ManualVoiceoverLogic : IManualVoiceoverLogic
         }
 
         // Place it in DB
-        var durationMilliseconds = await AudioHelper.GetAudioDurationAsync(dto.AudioData);
+        // var durationMilliseconds = await AudioHelper.GetAudioDurationAsync(dto.AudioData);
+        var durationMilliseconds = 0;
         var model = AcapellaModel.Create(dto.TextId, null, durationMilliseconds, 0, 0, URI);
 
         var id = await _writeRepository.Create(model, ct);
