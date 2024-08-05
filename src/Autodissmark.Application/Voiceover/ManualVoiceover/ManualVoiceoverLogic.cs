@@ -35,6 +35,12 @@ public class ManualVoiceoverLogic : IManualVoiceoverLogic
         // Add file
         var URI = Guid.NewGuid().ToString();
         var fileExtension = Path.GetExtension(dto.AudioData.FileName);
+
+        if (fileExtension == "")
+        {
+            fileExtension = ".wav";
+        }
+
         var filePath = Path.Combine(_acapellasPath, $"{URI}{fileExtension}");
 
         await using (var stream = new FileStream(filePath, FileMode.Create))
