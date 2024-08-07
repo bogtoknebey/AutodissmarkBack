@@ -1,10 +1,8 @@
 ﻿using Autodissmark.Application.Diss.DTO;
-using Autodissmark.Application.Voiceover.CommonVoiceover.DTO;
 using Autodissmark.ApplicationDataAccess.Repositories.ReadRepositories.Contracts;
 using Autodissmark.ApplicationDataAccess.Repositories.WriteRepositories.Contracts;
 using Autodissmark.AudioMixer.Mixer;
 using Autodissmark.AudioMixer.Mixer.DTO;
-using Autodissmark.Core.FileService;
 using Autodissmark.Core.FileService.Contracts;
 using Autodissmark.Domain.ApplicationModels.Diss;
 using Autodissmark.Domain.Options;
@@ -116,8 +114,17 @@ public class DissLogic : IDissLogic
         return dto;
     }
 
-    public async Task DeleteDiss(int dissId, CancellationToken ct)
+    public async Task DeleteDiss(int id, CancellationToken ct)
     {
-        await _dissWriteRepository.Delete(dissId, ct);
+        var dissModel = await _dissReadRepository.GetById(id, ct);
+
+        if (dissModel is null)
+        {
+            throw new Exception($"Diss with id: {id} is not exist.");
+        }
+
+        _fileService.DeleteFileIfExist(_dissesPath, dissModel.URI);
+
+        await _dissWriteRepository.Delete(id, ct);
     }
 }

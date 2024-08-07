@@ -33,4 +33,12 @@ public class FileService : IFileService
         return files[0];
     }
 
+    public void DeleteFileIfExist(string path, string URI)
+    {
+        var filePath = GetFilePath(path, URI);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+    }
 }
