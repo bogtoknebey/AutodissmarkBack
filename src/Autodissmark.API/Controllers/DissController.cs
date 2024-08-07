@@ -63,7 +63,7 @@ public class DissController : ControllerBase
     }
 
     [HttpDelete("delete-diss")]
-    public async Task<IActionResult> DeleteDiss([FromBody] int id, CancellationToken ct)
+    public async Task<IActionResult> DeleteDiss(int id, CancellationToken ct)
     {
         try
         {

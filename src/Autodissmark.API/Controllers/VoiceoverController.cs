@@ -105,7 +105,7 @@ public class VoiceoverController : ControllerBase
     }
 
     [HttpDelete("delete-voiceover")]
-    public async Task<IActionResult> DeleteVoiceover([FromBody] int id, CancellationToken ct)
+    public async Task<IActionResult> DeleteVoiceover(int id, CancellationToken ct)
     {
         try
         {

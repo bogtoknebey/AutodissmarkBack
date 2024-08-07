@@ -141,7 +141,7 @@ public class TextController : ControllerBase
     }
 
     [HttpDelete("delete-text")]
-    public async Task<IActionResult> DeleteText([FromBody] int id, CancellationToken ct) // TODO: use header instead of body
+    public async Task<IActionResult> DeleteText(int id, CancellationToken ct) // TODO: use header instead of body
     {
         try
         {
