@@ -45,9 +45,24 @@ public class CommonVoiceoverLogic : ICommonVoiceoverLogic
         return dto;
     }
 
-    public async Task<ICollection<GetVoiceoverDTO>> GetVoiceoversByTextId(int textId, CancellationToken ct)
+    public async Task<ICollection<GetVoiceoverDTO>> GetAllVoiceovers(int textId, CancellationToken ct)
     {
-        var models = await _acapellaReadRepository.GetByTextId(textId, ct);
+        var models = await _acapellaReadRepository.GetAllByTextId(textId, ct);
+        var dtos = new List<GetVoiceoverDTO>();
+
+        foreach (var model in models)
+        {
+            var fileData = await _fileService.ReadFileAsync(_acapellasPath, model.URI, ct);
+            var dto = new GetVoiceoverDTO(model.Id, fileData);
+            dtos.Add(dto);
+        }
+
+        return dtos;
+    }
+
+    public async Task<ICollection<GetVoiceoverDTO>> GetVoiceoversPage(int textId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        var models = await _acapellaReadRepository.GetPageByTextId(textId, pageSize, pageNumber, ct);
         var dtos = new List<GetVoiceoverDTO>();
 
         foreach (var model in models)
