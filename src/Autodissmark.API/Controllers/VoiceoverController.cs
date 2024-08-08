@@ -87,14 +87,30 @@ public class VoiceoverController : ControllerBase
         }
     }
 
-    [HttpGet("get-text-voiceovers")]
-    public async Task<IActionResult> GetVoiceoversByTextId(int textId, CancellationToken ct)
+    [HttpGet("get-all-voiceovers")]
+    public async Task<IActionResult> GetAllVoiceovers(int textId, CancellationToken ct)
     {
         try 
         {
             // TODO: setup authorId (check if authorId match with textAuthorId)
             // TODO: implement pagination(receive int pageCapacity, int pageNumber)
-            var dtos = await _commonVoiceoverLogic.GetVoiceoversByTextId(textId, ct);
+            var dtos = await _commonVoiceoverLogic.GetAllVoiceovers(textId, ct);
+            var responses = dtos.Select(_mapper.Map<GetVoiceoverResponse>).ToList();
+            return Ok(new SuccessResponse<List<GetVoiceoverResponse>>(responses));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
+        }
+    }
+
+    [HttpGet("get-voiceovers-page")]
+    public async Task<IActionResult> GetVoiceoversPage(int textId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        try
+        {
+            // TODO: setup authorId (check if authorId match with textAuthorId)
+            var dtos = await _commonVoiceoverLogic.GetVoiceoversPage(textId, pageSize, pageNumber, ct);
             var responses = dtos.Select(_mapper.Map<GetVoiceoverResponse>).ToList();
             return Ok(new SuccessResponse<List<GetVoiceoverResponse>>(responses));
         }
