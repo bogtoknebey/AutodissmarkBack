@@ -22,11 +22,24 @@ public class AcapellaReadRepository : IAcapellaReadRepository
         return _mapper.Map<AcapellaModel>(entity);
     }
 
-    public async Task<ICollection<AcapellaModel>> GetByTextId(int textId, CancellationToken ct = default)
+    public async Task<ICollection<AcapellaModel>> GetAllByTextId(int textId, CancellationToken ct = default)
     {
         var entities = await _context.Acapellas.Where(e => e.TextEntityId == textId).ToListAsync();
         var models = entities.Select(_mapper.Map<AcapellaModel>).ToList();
         return models;
+    }
+
+    public async Task<ICollection<AcapellaModel>> GetPageByTextId(int textId, int pageSize, int pageNumber, CancellationToken ct = default)
+    {
+        var skipAmount = (pageNumber - 1) * pageSize;
+
+        var entities = await _context.Acapellas
+            .Where(a => a.TextEntityId == textId)
+            .Skip(skipAmount)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return _mapper.Map<ICollection<AcapellaModel>>(entities);
     }
 
     public async Task<int> GetAuthorId(int id, CancellationToken ct = default)

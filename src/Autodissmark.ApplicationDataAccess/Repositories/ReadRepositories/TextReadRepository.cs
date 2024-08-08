@@ -31,7 +31,7 @@ public class TextReadRepository : ITextReadRepository
 
     public async Task<ICollection<TextModel>> GetTextsPage(int authorId, int pageSize, int pageNumber, CancellationToken ct = default)
     {
-        int skipAmount = (pageNumber - 1) * pageSize;
+        var skipAmount = (pageNumber - 1) * pageSize;
 
         var entities = await _context.Texts
             .Where(t => t.AuthorEntityId == authorId)
