@@ -35,6 +35,12 @@ public class ManualVoiceoverLogic : IManualVoiceoverLogic
         // Add file
         var URI = Guid.NewGuid().ToString();
         var fileExtension = Path.GetExtension(dto.AudioData.FileName);
+
+        if (fileExtension == "")
+        {
+            fileExtension = ".wav";
+        }
+
         var filePath = Path.Combine(_acapellasPath, $"{URI}{fileExtension}");
 
         await using (var stream = new FileStream(filePath, FileMode.Create))
@@ -43,7 +49,8 @@ public class ManualVoiceoverLogic : IManualVoiceoverLogic
         }
 
         // Place it in DB
-        var durationMilliseconds = await AudioHelper.GetAudioDurationAsync(dto.AudioData);
+        // var durationMilliseconds = await AudioHelper.GetAudioDurationAsync(dto.AudioData);
+        var durationMilliseconds = 0;
         var model = AcapellaModel.Create(dto.TextId, null, durationMilliseconds, 0, 0, URI);
 
         var id = await _writeRepository.Create(model, ct);

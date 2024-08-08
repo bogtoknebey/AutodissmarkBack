@@ -9,32 +9,32 @@ namespace Autodissmark.Application.Voiceover.CommonVoiceover;
 
 public class CommonVoiceoverLogic : ICommonVoiceoverLogic
 {
-    private readonly IFileService _readFileService;
-    private readonly IAcapellaReadRepository _readRepository;
-    private readonly IAcapellaWriteRepository _writeRepository;
+    private readonly IFileService _fileService;
+    private readonly IAcapellaReadRepository _acapellaReadRepository;
+    private readonly IAcapellaWriteRepository _acapellaWriteRepository;
     private readonly string _acapellasPath;
 
     public CommonVoiceoverLogic(
         IFileService readFileService,
-        IAcapellaReadRepository readRepository,
-        IAcapellaWriteRepository writeRepository,
+        IAcapellaReadRepository acapellaReadRepository,
+        IAcapellaWriteRepository acapellaWriteRepository,
         IOptions<FilePathOptions> filePathOptions)
     {
-        _readFileService = readFileService;
-        _readRepository = readRepository;
-        _writeRepository = writeRepository;
+        _fileService = readFileService;
+        _acapellaReadRepository = acapellaReadRepository;
+        _acapellaWriteRepository = acapellaWriteRepository;
         _acapellasPath = filePathOptions.Value.AcapellasFolderPath;
     }
 
     public async Task<GetVoiceoverDTO> GetVoiceoverById(int id, CancellationToken ct)
     {
-        var acapellaModel = await _readRepository.GetById(id, ct);
+        var acapellaModel = await _acapellaReadRepository.GetById(id, ct);
         if (acapellaModel is null)
         {
             throw new Exception($"Acapella with id: {id} is not exist.");
         }
 
-        var fileData = await _readFileService.ReadFileAsync(_acapellasPath, acapellaModel.URI, ct);
+        var fileData = await _fileService.ReadFileAsync(_acapellasPath, acapellaModel.URI, ct);
 
         if (fileData is null)
         {
@@ -47,12 +47,12 @@ public class CommonVoiceoverLogic : ICommonVoiceoverLogic
 
     public async Task<ICollection<GetVoiceoverDTO>> GetVoiceoversByTextId(int textId, CancellationToken ct)
     {
-        var models = await _readRepository.GetByTextId(textId, ct);
+        var models = await _acapellaReadRepository.GetByTextId(textId, ct);
         var dtos = new List<GetVoiceoverDTO>();
 
         foreach (var model in models)
         {
-            var fileData = await _readFileService.ReadFileAsync(_acapellasPath, model.URI, ct);
+            var fileData = await _fileService.ReadFileAsync(_acapellasPath, model.URI, ct);
             var dto = new GetVoiceoverDTO(model.Id, fileData);
             dtos.Add(dto);
         }
@@ -62,6 +62,15 @@ public class CommonVoiceoverLogic : ICommonVoiceoverLogic
 
     public async Task DeleteVoiceover(int id, CancellationToken ct)
     {
-        await _writeRepository.Delete(id, ct);
+        var acapellaModel = await _acapellaReadRepository.GetById(id, ct);
+
+        if (acapellaModel is null)
+        {
+            throw new Exception($"Acapella with id: {id} is not exist.");
+        }
+
+        _fileService.DeleteFileIfExist(_acapellasPath, acapellaModel.URI);
+
+        await _acapellaWriteRepository.Delete(id, ct);
     }
 }
