@@ -7,7 +7,6 @@ using Autodissmark.Core.FileService.Contracts;
 using Autodissmark.Domain.ApplicationModels.Diss;
 using Autodissmark.Domain.Options;
 using Microsoft.Extensions.Options;
-using System;
 
 namespace Autodissmark.Application.Diss;
 
@@ -112,6 +111,36 @@ public class DissLogic : IDissLogic
 
         var dto = new GetDissDTO(dissModel.Id, fileData);
         return dto;
+    }
+
+    public async Task<ICollection<GetDissDTO>> GetAllDisses(int textId, CancellationToken ct)
+    {
+        var models = await _dissReadRepository.GetAllByTextId(textId, ct);
+        var dtos = new List<GetDissDTO>();
+
+        foreach (var model in models)
+        {
+            var fileData = await _fileService.ReadFileAsync(_dissesPath, model.URI, ct);
+            var dto = new GetDissDTO(model.Id, fileData);
+            dtos.Add(dto);
+        }
+
+        return dtos;
+    }
+
+    public async Task<ICollection<GetDissDTO>> GetDissesPage(int textId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        var models = await _dissReadRepository.GetPageByTextId(textId, pageSize, pageNumber, ct);
+        var dtos = new List<GetDissDTO>();
+
+        foreach (var model in models)
+        {
+            var fileData = await _fileService.ReadFileAsync(_dissesPath, model.URI, ct);
+            var dto = new GetDissDTO(model.Id, fileData);
+            dtos.Add(dto);
+        }
+
+        return dtos;
     }
 
     public async Task DeleteDiss(int id, CancellationToken ct)
