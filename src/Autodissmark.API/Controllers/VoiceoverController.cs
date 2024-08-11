@@ -93,7 +93,6 @@ public class VoiceoverController : ControllerBase
         try 
         {
             // TODO: setup authorId (check if authorId match with textAuthorId)
-            // TODO: implement pagination(receive int pageCapacity, int pageNumber)
             var dtos = await _commonVoiceoverLogic.GetAllVoiceovers(textId, ct);
             var responses = dtos.Select(_mapper.Map<GetVoiceoverResponse>).ToList();
             return Ok(new SuccessResponse<List<GetVoiceoverResponse>>(responses));
