@@ -62,6 +62,38 @@ public class DissController : ControllerBase
         }
     }
 
+    [HttpGet("get-all-disses")]
+    public async Task<IActionResult> GetAllDisses(int textId, CancellationToken ct)
+    {
+        try
+        {
+            // TODO: setup authorId (check if authorId match with textAuthorId)
+            var dtos = await _dissLogic.GetAllDisses(textId, ct);
+            var responses = dtos.Select(_mapper.Map<GetDissResponse>).ToList();
+            return Ok(new SuccessResponse<List<GetDissResponse>>(responses));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
+        }
+    }
+
+    [HttpGet("get-disses-page")]
+    public async Task<IActionResult> GetDissesPage(int textId, int pageSize, int pageNumber, CancellationToken ct)
+    {
+        try
+        {
+            // TODO: setup authorId (check if authorId match with textAuthorId)
+            var dtos = await _dissLogic.GetDissesPage(textId, pageSize, pageNumber, ct);
+            var responses = dtos.Select(_mapper.Map<GetDissResponse>).ToList();
+            return Ok(new SuccessResponse<List<GetDissResponse>>(responses));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ErrorResponse(ExceptionCodes.InternalServerError, ex.Message));
+        }
+    }
+
     [HttpDelete("delete-diss")]
     public async Task<IActionResult> DeleteDiss(int id, CancellationToken ct)
     {

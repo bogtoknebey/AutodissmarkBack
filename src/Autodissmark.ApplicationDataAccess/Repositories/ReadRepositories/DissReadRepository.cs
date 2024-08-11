@@ -22,6 +22,30 @@ public class DissReadRepository : IDissReadRepository
         return _mapper.Map<DissModel>(entity);
     }
 
+    public async Task<ICollection<DissModel>> GetAllByTextId(int textId, CancellationToken ct = default)
+    {
+        var entities = await _context.Disses
+            .Where(d => d.DissAcapellaEntities.Any(da => da.AcapellaEntity.TextEntityId == textId))
+            .ToListAsync(ct);
+
+        var models = entities.Select(_mapper.Map<DissModel>).ToList();
+        return models;
+    }
+
+    public async Task<ICollection<DissModel>> GetPageByTextId(int textId, int pageSize, int pageNumber, CancellationToken ct = default)
+    {
+        var skipAmount = (pageNumber - 1) * pageSize;
+
+        var entities = await _context.Disses
+            .Where(d => d.DissAcapellaEntities.Any(da => da.AcapellaEntity.TextEntityId == textId))
+            .Skip(skipAmount)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        var models = entities.Select(_mapper.Map<DissModel>).ToList();
+        return models;
+    }
+
     public async Task<int> GetAuthorId(int id, CancellationToken ct = default)
     {
         throw new NotImplementedException();
