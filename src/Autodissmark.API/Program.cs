@@ -38,7 +38,6 @@ using Autodissmark.API.Services.JWTBuilder;
 using Autodissmark.Application.Login;
 using Autodissmark.Core.Constants;
 using Autodissmark.Domain.Enums;
-using Autodissmark.TGBot;
 
 const string CorsPolicyName_AllowAnyOrigin = "AllowAnyOrigin";
 
@@ -46,7 +45,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region DI
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<TgBotBuilder>();
 builder.Services.AddScoped<IWebDriverTaskBuilder, WebDriverTaskBuilder>();
 builder.Services.AddScoped<ITranslate, Translator>();
 builder.Services.AddScoped<IAuthorReadRepository, AuthorReadRepository>();
@@ -214,26 +212,6 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = "swagger";
     });
 }
-
-#region TGBot
-var lifetime = app.Lifetime;
-var botService = app.Services.GetRequiredService<TgBotBuilder>();
-
-lifetime.ApplicationStarted.Register(() =>
-{
-    Task.Run(async () =>
-    {
-        try
-        {
-            await botService.RunAsync(CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Ошибка при запуске бота: {ex.Message}");
-        }
-    });
-});
-#endregion
 
 app.UseCors(CorsPolicyName_AllowAnyOrigin);
 app.UseHttpsRedirection();
